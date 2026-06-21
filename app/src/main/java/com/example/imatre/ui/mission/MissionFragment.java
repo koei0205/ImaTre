@@ -14,6 +14,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.imatre.R;
+import com.example.imatre.data.local.entity.MissionEntity;
+import com.example.imatre.data.repository.MissionRepository;
 import com.example.imatre.model.Mission;
 import com.example.imatre.service.MissionGenerator;
 import com.example.imatre.util.DateUtils;
@@ -21,6 +23,8 @@ import com.example.imatre.util.DateUtils;
 public class MissionFragment extends Fragment {
 
     private Mission currentMission;
+    private MissionRepository missionRepository;
+    private boolean isMissionSaved;
 
     @Nullable
     @Override
@@ -31,8 +35,11 @@ public class MissionFragment extends Fragment {
     ) {
         View view = inflater.inflate(R.layout.fragment_mission, container, false);
 
+        missionRepository = new MissionRepository(requireContext());
+
         MissionGenerator missionGenerator = new MissionGenerator();
         currentMission = missionGenerator.generateMission();
+        isMissionSaved = false;
 
         TextView missionDescription = view.findViewById(R.id.mission_description);
         missionDescription.setText(
@@ -72,7 +79,14 @@ public class MissionFragment extends Fragment {
             } else {
                 currentMission.setStatus("MISSED");
                 missionRemainingTime.setText("残り時間：時間切れ");
-                Toast.makeText(requireContext(), "時間切れです", Toast.LENGTH_SHORT).show();
+                if (!isMissionSaved) {
+                    MissionEntity missionEntity = missionRepository.toEntity(currentMission);
+                    if (missionEntity != null) {
+                        missionRepository.saveMission(missionEntity);
+                        isMissionSaved = true;
+                    }
+                }
+                Toast.makeText(requireContext(), "時間切れです。履歴に保存しました", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -97,7 +111,15 @@ public class MissionFragment extends Fragment {
                     }
 
                     currentMission.setUserFeeling(which + 1);
-                    Toast.makeText(requireContext(), "回答を保存しました", Toast.LENGTH_SHORT).show();
+                    if (!isMissionSaved) {
+                        MissionEntity missionEntity = missionRepository.toEntity(currentMission);
+                        if (missionEntity != null) {
+                            missionRepository.saveMission(missionEntity);
+                            isMissionSaved = true;
+                        }
+                    }
+
+                    Toast.makeText(requireContext(), "回答と履歴を保存しました", Toast.LENGTH_SHORT).show();
                 })
                 .show();
     }
