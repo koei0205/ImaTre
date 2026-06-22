@@ -36,10 +36,8 @@ public class MissionFragment extends Fragment {
     private TextView missionStateText;
     private Button missionClearButton;
     private Button startNewMissionButton;
-    private Button testTimeoutButton;
     private boolean isMissionSaved;
     private boolean isTodayMissionCountLoaded;
-    private boolean isTestTimeoutApplied;
     private int todayMissionCount;
 
     @Nullable
@@ -62,10 +60,8 @@ public class MissionFragment extends Fragment {
         missionStateText = view.findViewById(R.id.mission_state_text);
         missionClearButton = view.findViewById(R.id.mission_clear_button);
         startNewMissionButton = view.findViewById(R.id.start_new_mission_button);
-        testTimeoutButton = view.findViewById(R.id.test_timeout_button);
         missionClearButton.setEnabled(false);
         startNewMissionButton.setEnabled(false);
-        testTimeoutButton.setEnabled(false);
 
         missionClearButton.setOnClickListener(v -> {
             if (currentMission == null) {
@@ -88,7 +84,6 @@ public class MissionFragment extends Fragment {
                         isMissionSaved = true;
                         missionStateText.setText("時間切れです。履歴に保存しました");
                         missionClearButton.setEnabled(false);
-                        testTimeoutButton.setEnabled(false);
                         loadTodayMissionCount(false);
                     }
                 }
@@ -97,7 +92,6 @@ public class MissionFragment extends Fragment {
         });
 
         startNewMissionButton.setOnClickListener(v -> startNewMission());
-        testTimeoutButton.setOnClickListener(v -> makeCurrentMissionExpired());
 
         return view;
     }
@@ -116,10 +110,8 @@ public class MissionFragment extends Fragment {
 
         currentMission = missionGenerator.generateMission();
         isMissionSaved = false;
-        isTestTimeoutApplied = false;
         missionStateText.setText("現在のミッションに挑戦中です");
         missionClearButton.setEnabled(true);
-        testTimeoutButton.setEnabled(true);
 
         missionDescription.setText(
                 currentMission.getExerciseName()
@@ -140,20 +132,6 @@ public class MissionFragment extends Fragment {
         missionCalories.setText(
                 "推定消費カロリー：" + currentMission.getEstimatedCalories() + " kcal"
         );
-    }
-
-    private void makeCurrentMissionExpired() {
-        if (currentMission == null || isMissionSaved || todayMissionCount >= DAILY_MISSION_LIMIT) {
-            return;
-        }
-
-        currentMission.setDeadlineTime(dateUtils.getCurrentTimeMillis() - 1L);
-        isTestTimeoutApplied = true;
-        missionRemainingTime.setText("残り時間：時間切れ");
-        missionStateText.setText(
-                "時間切れ状態にしました。クリアボタンを押すとミス保存されます"
-        );
-        testTimeoutButton.setEnabled(false);
     }
 
     private void loadTodayMissionCount(boolean startMissionIfNeeded) {
@@ -184,14 +162,10 @@ public class MissionFragment extends Fragment {
             missionStateText.setText("今日はすべてのミッションが完了しました");
             missionClearButton.setEnabled(false);
             startNewMissionButton.setEnabled(false);
-            testTimeoutButton.setEnabled(false);
         } else {
             int remainingCount = DAILY_MISSION_LIMIT - todayMissionCount;
             remainingMissionCountText.setText("あと" + remainingCount + "回できます");
             startNewMissionButton.setEnabled(isTodayMissionCountLoaded);
-            testTimeoutButton.setEnabled(
-                    currentMission != null && !isMissionSaved && !isTestTimeoutApplied
-            );
         }
     }
 
@@ -220,7 +194,6 @@ public class MissionFragment extends Fragment {
                             isMissionSaved = true;
                             missionStateText.setText("クリア済みです。新しいミッションを開始できます");
                             missionClearButton.setEnabled(false);
-                            testTimeoutButton.setEnabled(false);
                             loadTodayMissionCount(false);
                         }
                     }
