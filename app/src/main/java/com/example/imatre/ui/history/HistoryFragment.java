@@ -14,7 +14,10 @@ import com.example.imatre.R;
 import com.example.imatre.data.local.entity.MissionEntity;
 import com.example.imatre.data.repository.MissionRepository;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class HistoryFragment extends Fragment {
 
@@ -57,18 +60,35 @@ public class HistoryFragment extends Fragment {
 
     private String buildHistoryText(List<MissionEntity> missions) {
         StringBuilder builder = new StringBuilder();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm", Locale.getDefault());
 
         for (MissionEntity mission : missions) {
-            builder.append(mission.getExerciseName())
+            String status = mission.getStatus();
+            if ("CLEARED".equals(status)) {
+                status = "クリア";
+            } else if ("MISSED".equals(status)) {
+                status = "ミス";
+            }
+
+            builder.append(dateFormat.format(new Date(mission.getStartTime())))
+                    .append("\n")
+                    .append(mission.getExerciseName())
                     .append(" ")
                     .append(mission.getTargetCount())
                     .append(mission.getUnit())
-                    .append("：")
-                    .append(mission.getStatus())
-                    .append(" ")
-                    .append(mission.getEstimatedCalories())
-                    .append("kcal")
-                    .append("\n");
+                    .append("\n結果：")
+                    .append(status)
+                    .append("\n消費カロリー：")
+                    .append(String.format(Locale.getDefault(), "%.1f", mission.getEstimatedCalories()))
+                    .append(" kcal\nきつさ：");
+
+            if (mission.getUserFeeling() >= 1 && mission.getUserFeeling() <= 5) {
+                builder.append(mission.getUserFeeling()).append(" / 5");
+            } else {
+                builder.append("未回答");
+            }
+
+            builder.append("\n\n");
         }
 
         return builder.toString().trim();
